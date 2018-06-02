@@ -1,0 +1,57 @@
+/**
+ * @author Alan
+ * 
+ * Coursera: Princeton Algorithms and Data Structures 2
+ * WordNet - Directed Graphs
+ * 
+ */
+
+import edu.princeton.cs.algs4.Bag;
+import edu.princeton.cs.algs4.Digraph;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Hashtable;
+
+public class WordNet {
+	private Digraph dg;
+	private SAP sap;
+	private ArrayList<String> synsetsList;
+	private Hashtable<String, Bag<Integer>> words;
+	
+	// constructor takes the name of the two input files
+	public WordNet(String synsets, String hypernyms) {
+		words = new Hashtable<String, Bag<Integer>>();
+		synsetsList = new ArrayList<String>();
+		int n = parseSynsets(synsets);
+		dg = new Digraph(n);
+		parseHypernyms(n, hypernyms);
+		this.sap = new SAP(dg);
+	}
+
+	// returns all WordNet nouns
+	public Iterable<String> nouns() {
+
+	}
+
+	// is the word a WordNet noun?
+	public boolean isNoun(String word) {
+
+	}
+
+	// distance between nounA and nounB (defined below)
+	public int distance(String nounA, String nounB) {
+
+	}
+
+	// a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
+	// in a shortest ancestral path (defined below)
+	public String sap(String nounA, String nounB) {
+
+	}
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

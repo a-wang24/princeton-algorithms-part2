@@ -1,0 +1,116 @@
+/**
+ * @author Alan
+ * 
+ * Coursera: Princeton Algorithms and Data Structures 2
+ * WordNet - Directed Graphs
+ * 
+ */
+
+import edu.princeton.cs.algs4.Bag;
+import edu.princeton.cs.algs4.Digraph;
+import edu.princeton.cs.algs4.DirectedCycle;
+import edu.princeton.cs.algs4.In;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Hashtable;
+
+public class WordNet {
+	private Digraph dg;
+	private SAP sap;
+	private ArrayList<String> synsetsList;
+	private Hashtable<String, Bag<Integer>> words;
+	
+	// constructor takes the name of the two input files
+	public WordNet(String synsets, String hypernyms) {
+		words = new Hashtable<String, Bag<Integer>>();
+		synsetsList = new ArrayList<String>();
+		int n = parseSynsets(synsets);
+		dg = new Digraph(n);
+		parseHypernyms(n, hypernyms);
+		this.sap = new SAP(dg);
+	}
+
+	// read in synsets from file
+	private int parseSynsets(String synsets) {
+		In in = new In(synsets);
+		int n = 0;
+		
+		while (!in.isEmpty()) {
+			String[] fields = in.readLine().split(",");
+			if (fields.length < 3) throw new java.lang.IllegalArgumentException();
+			
+			int synsetID = Integer.parseInt(fields[0]);
+			synsetsList.add(synsetID, fields[1]);
+			n++;
+			
+			String[] wordsArray = fields[1].split(" ");
+			int numWords = wordsArray.length;
+			for (int i = 0; i < numWords; i++) {
+				if (words.containsKey(wordsArray[i])) words.get(wordsArray[i]).add(synsetID);
+				else {
+					Bag<Integer> newIntBag = new Bag<Integer>();
+					newIntBag.add(synsetID);
+					words.put(wordsArray[i], newIntBag);
+				}
+			}
+		}
+		
+		in.close();
+		return n;
+	}
+	
+	// read in hypernyms from file
+	private void parseHypernyms(int n, String hypernyms) {
+		boolean[] notRoot = new boolean[n];
+		In in = new In(hypernyms);
+		while(!in.isEmpty()) {
+			String[] fields = in.readLine().split(",");
+			int sourceNode = Integer.parseInt(fields[0]);
+			notRoot[sourceNode] = true;
+			for (int i = 1; i < fields.length; j++) {
+				dg.addEdge(sourceNode,  Integer.parseInt(fields[i]));
+			}
+		}
+		in.close();
+		
+		DirectedCycle cycle = new DirectedCycle(dg);
+		if (cycle.hasCycle()) throw new java.lang.IllegalArgumentException("Cycle found");
+		
+		int root = 0;
+		for (boolean noRoot : notRoot) {
+			if (!noRoot) root++;
+		}
+		if (root > 1) throw new java.lang.IllegalArgumentException("Net has multiple roots");
+	}
+	
+	// returns all WordNet nouns
+	public Iterable<String> nouns() {
+		return Collections.list(words.keys());
+	}
+
+	// is the word a WordNet noun?
+	public boolean isNoun(String word) {
+		return words.containsKey(word);
+	}
+
+	// distance between nounA and nounB (defined below)
+	public int distance(String nounA, String nounB) {
+		if(!isNoun(nounA) || !isNoun(nounB)) throw new java.lang.IllegalArgumentException("Not a valid wordNet noun");
+		Bag<Integer> A = words.get(nounA);
+		Bag<Integer> B = words.get(nounB);
+		return sap.length(A, B);
+	}
+
+	// a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
+	// in a shortest ancestral path (defined below)
+	public String sap(String nounA, String nounB) {
+
+	}
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

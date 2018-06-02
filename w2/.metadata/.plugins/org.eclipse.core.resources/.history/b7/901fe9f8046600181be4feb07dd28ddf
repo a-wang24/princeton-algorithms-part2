@@ -1,0 +1,167 @@
+/** 
+ * @author Alan
+ * Princeton Algorithms Part 2
+ * Week 2: Seam Carving
+ */
+
+import edu.princeton.cs.algs4.Picture;
+import static java.lang.Math.sqrt;
+import static java.lang.Math.pow;
+
+public class SeamCarver {
+	private Picture pic;
+	private double[] energy;
+	
+	// create a seam carver object based on the given picture
+	public SeamCarver(Picture picture) {
+		if (picture == null) throw new java.lang.IllegalArgumentException("picture is null");
+		
+		pic = picture;
+		energy = new double[width()*height()];
+		computeEnergy();
+	}
+	
+	// current picture
+	public Picture picture() {
+		return pic;
+	}
+	
+	// width of current picture
+	public     int width() {
+		return pic.width();
+	}
+	
+	// height of current picture
+	public     int height() {
+		return pic.height();
+	}
+	
+	// compute the energies
+	private void computeEnergy() {
+		for (int col = 0; col < width(); col++) {
+			for (int row = 0; row < height(); row++) {
+				energy[oneD(col, row)] = energy(col, row);
+			}
+		}
+	}
+	// energy of pixel at column x and row y
+	public  double energy(int x, int y) {
+		if (x < 0 || x > width()-1) throw new java.lang.IllegalArgumentException("x out of range");
+		if (y < 0 || y > width()-1) throw new java.lang.IllegalArgumentException("y out of range");
+		if (x == 0 || x == width()-1 || y == 0 || y == height()-1) return 1000;
+		return sqrt(pow(xGradient(x, y), 2) + pow(yGradient(x, y), 2));
+	}
+	
+	// x gradient function
+	private double xGradient(int x, int y) {
+		int[] rgb1 = extractRGB(pic.getRGB(x+1, y));
+		int[] rgb2 = extractRGB(pic.getRGB(x-1, y));
+		return pow(rgb1[0]-rgb2[0], 2) + pow(rgb1[1]-rgb2[1], 2) + pow(rgb1[2]-rgb2[2], 2);
+	}
+	
+	// y gradient function
+	private double yGradient(int x, int y) {
+		int[] rgb1 = extractRGB(pic.getRGB(x, y+1));
+		int[] rgb2 = extractRGB(pic.getRGB(x, y-1));
+		return pow(rgb1[0]-rgb2[0], 2) + pow(rgb1[1]-rgb2[1], 2) + pow(rgb1[2]-rgb2[2], 2);
+	} 
+	
+	// compute
+	// extract r, g, b components from 32-bit int
+	private int[] extractRGB(int rgb) {
+		int r = (rgb >> 16) & 0xFF;
+		int g = (rgb >> 8)  & 0xFF;
+		int b = (rgb >> 0)  & 0xFF;
+		int[] components = new int[] {r, g, b};
+		return components;
+	}
+	
+	// sequence of indices for horizontal seam
+	public   int[] findHorizontalSeam() {
+		
+	}
+	
+	// sequence of indices for vertical seam
+	public   int[] findVerticalSeam() {
+		int n = width()*height();
+		int[] seam = new int[height()];
+		int[] colTo = new int[n];
+		double[] distTo = new double[n];
+		initColToDistTo(colTo, distTo);
+		
+		// loop over all rows but last one
+		for (int row = 0; row < height() - 1; row++) {
+			for (int col = 0; col < width(); col++) {
+				int pixel = oneD(col, row);
+				// relax left-lower pixel if exists
+				if (col - 1 >= 0) relax(pixel, oneD(col-1, row+1), colTo, distTo);
+				// relax right-lower pixel if exists
+				if (col + 1 <= width()-1) relax(pixel, oneD(col+1, row+1), colTo, distTo);
+				// relax middle-lower pixel
+				relax(pixel, oneD(col, row+1), colTo, distTo);
+			}
+		}
+		
+		// find min distance in last row
+		double min = Double.POSITIVE_INFINITY;
+		int index = -1;
+		for (int col = 0; col < width(); col++) {
+			int tempInd = col + (width() * (height() - 1));
+			if (distTo[tempInd] < min) {
+				index = tempInd;
+				min = distTo[tempInd];
+			}
+		}
+	}
+	
+	// relax given edge
+	private void relax(int from, int to, int[] colTo, double[] distTo) {
+		if (distTo[from] + energy[to] < distTo[to]) {
+			distTo[to] = distTo[from] + energy[to];
+			colTo[to] = from;
+		}
+	}
+	// initialize column to and distance to arrays
+	private void initColToDistTo(int[] colTo, double[] distTo) {
+		for (int col = 0; col < width(); col++) {
+			for (int row = 0; row < height(); row++) {
+				int pixel = oneD(col, row);
+				if (col == 0) distTo[pixel] = 0;
+				else distTo[pixel] = Double.POSITIVE_INFINITY;
+				colTo[pixel] = -1;
+			}
+		}
+	}
+	
+	// return 1d index of col, row
+	private int oneD(int col, int row) {
+		return width() * row + col;
+	}
+	// remove horizontal seam from current picture
+	public    void removeHorizontalSeam(int[] seam) {
+		if (seam == null) throw new java.lang.IllegalArgumentException("seam array is null");
+		if (height() <= 1) throw new java.lang.IllegalArgumentException("can not remove horizontal seam");
+		if (!isHorizSeam(seam)) throw new java.lang.IllegalArgumentException("not a valid horizontal seam");
+	}
+	
+	// remove vertical seam from current picture
+	public    void removeVerticalSeam(int[] seam) {
+		if (seam == null) throw new java.lang.IllegalArgumentException("seam array is null");
+		if (width() <= 1) throw new java.lang.IllegalArgumentException("can not remove vertical seam");
+		if (!isVertSeam(seam)) throw new java.lang.IllegalArgumentException("not a valid vertical seam");
+	}
+	
+	// check if seam is valid
+	private boolean isVertSeam(int[] seam) {
+		if (seam.length != height()) return false;
+		
+	}
+	private boolean isHorizSeam(int[] seam) {
+		if (seam.length != width()) return false;
+	}
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}
